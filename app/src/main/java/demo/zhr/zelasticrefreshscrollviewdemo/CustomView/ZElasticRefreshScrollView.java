@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -30,7 +31,7 @@ import demo.zhr.zelasticrefreshscrollviewdemo.Utils.DisplayUtil;
 public class ZElasticRefreshScrollView extends ScrollView {
 
     private RelativeLayout inner;
-    private RelativeLayout mMoveView;
+    private LinearLayout mMoveView;
     private View mLoadingBottom;
     private View mTopView;
     private float y;
@@ -39,7 +40,7 @@ public class ZElasticRefreshScrollView extends ScrollView {
     private boolean isRefresh;
     private boolean isAction_UP;
     private RefreshListener listener;
-    private RelativeLayout mLoadingTop;
+    private View mLoadingTop;
     private ImageView mLoadingTopImg;
     private TextView mLoadingText;
     public static final int  SCROLL_TO_UP =1;
@@ -49,6 +50,8 @@ public class ZElasticRefreshScrollView extends ScrollView {
     private int mTopViewHieght = 0;
     private int mLoadingViewHeight = 0;
     private int offset = 15;
+    private int actionbarHeight;
+    private boolean isCustomLoadingView;
 
     public ZElasticRefreshScrollView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
@@ -67,7 +70,13 @@ public class ZElasticRefreshScrollView extends ScrollView {
     @Override
     protected void onScrollChanged(int x, int y, int oldx, int oldy) {
         super.onScrollChanged(x, y, oldx, oldy);
-        height = inner.getMeasuredHeight()-mLoadingBottom.getMeasuredHeight()- DisplayUtil.getScreenHeight(getContext());
+        if(actionbarHeight==0){
+            int[] position = new int[2];
+            getLocationOnScreen(position);
+            actionbarHeight = position[1];
+            Log.d("zhhr1122","actionbarHeight="+actionbarHeight);
+        }
+        height = inner.getMeasuredHeight()-mLoadingBottom.getMeasuredHeight()- DisplayUtil.getScreenHeight(getContext())+actionbarHeight;
         if(y>=height){
             this.scrollTo(0,height);
         }
@@ -85,14 +94,17 @@ public class ZElasticRefreshScrollView extends ScrollView {
         if (getChildCount() > 0) {
             inner = (RelativeLayout) getChildAt(0);
         }
-        mMoveView = (RelativeLayout) inner.getChildAt(0);
+        mMoveView = (LinearLayout) inner.getChildAt(0);
         mTopView = inner.getChildAt(1);
-        mLoadingTop = (RelativeLayout) mMoveView.getChildAt(0);
-        mLoadingText = (TextView) ((LinearLayout)mLoadingTop.getChildAt(0)).getChildAt(1);
-        mLoadingBottom = mMoveView.getChildAt(3);
+        mLoadingTop = mMoveView.getChildAt(0);
+        if(!isCustomLoadingView){
+            RelativeLayout DefaltLoadingTop = (RelativeLayout) mLoadingTop;
+            mLoadingText = (TextView) ((LinearLayout)DefaltLoadingTop.getChildAt(0)).getChildAt(1);
+            mLoadingTopImg = (ImageView) inner.findViewById(R.id.iv_loading_top);
+            initAnimation();
+        }
+        mLoadingBottom = mMoveView.getChildAt(2);
         setOverScrollMode(OVER_SCROLL_NEVER);//取消5.0效果
-        mLoadingTopImg = (ImageView) inner.findViewById(R.id.iv_loading_top);
-        initAnimation();
     }
 
     @Override
@@ -135,7 +147,10 @@ public class ZElasticRefreshScrollView extends ScrollView {
             case MotionEvent.ACTION_DOWN:
                 y = ev.getY();
                 //Log.d("zhr", "MotionEvent.ACTION_DOWN  y=" + y);
-                mLoadingText.setText("下拉刷新");
+                if(!isCustomLoadingView){
+                    mLoadingText.setText("下拉刷新");
+                }
+
                 if(listener!=null){
                     listener.onActionDown();
                 }
@@ -148,7 +163,9 @@ public class ZElasticRefreshScrollView extends ScrollView {
                     // Log.v("mlguitar", "will up and animation");
                     if(mMoveView.getTop()>(mTopViewHieght+offset)&&listener!=null){
                         RefreshAnimation();
-                        mLoadingText.setText("努力加载中...");
+                        if(!isCustomLoadingView){
+                            mLoadingText.setText("努力加载中...");
+                        }
                         //animation();
                         isRefresh = true;
                         if(listener!=null){
@@ -193,7 +210,10 @@ public class ZElasticRefreshScrollView extends ScrollView {
                     }
 
                     if(mMoveView.getTop()>(mTopViewHieght+offset)&&listener!=null){
-                        mLoadingText.setText("松开即可刷新");
+                        if(!isCustomLoadingView){
+                            mLoadingText.setText("松开即可刷新");
+                        }
+
                     }
                     // 移动布局
                 }
@@ -234,7 +254,9 @@ public class ZElasticRefreshScrollView extends ScrollView {
                 if(listener!=null){
                     listener.onRefreshFinish();
                 }
-                mLoadingText.setText("下拉刷新");
+                if(!isCustomLoadingView){
+                    mLoadingText.setText("下拉刷新");
+                }
             }
 
             @Override
@@ -242,7 +264,9 @@ public class ZElasticRefreshScrollView extends ScrollView {
 
             }
         });
-        mLoadingText.setText("刷新完成");
+        if(!isCustomLoadingView){
+            mLoadingText.setText("刷新完成");
+        }
         mMoveView.startAnimation(ta);
         // 设置回到正常的布局位置
         mMoveView.layout(normal.left, normal.top, normal.right, normal.bottom);
@@ -304,6 +328,9 @@ public class ZElasticRefreshScrollView extends ScrollView {
      * @param view
      */
     public void setLoadingView(View view) {
+        isCustomLoadingView = true;
+        mMoveView.removeViewAt(0);
+        mMoveView.addView(view,0);
         onFinishInflate();
     }
 
@@ -311,7 +338,9 @@ public class ZElasticRefreshScrollView extends ScrollView {
      * 设置数据view
      * @param view
      */
-    public void setDataView(View view) {
+    public void setContentView(View view) {
+        mMoveView.removeViewAt(1);
+        mMoveView.addView(view,1);
         onFinishInflate();
     }
 
@@ -320,6 +349,8 @@ public class ZElasticRefreshScrollView extends ScrollView {
      * @param view
      */
     public void setBottomView(View view) {
+        mMoveView.removeViewAt(2);
+        mMoveView.addView(view,2);
         onFinishInflate();
     }
 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="500dp">
+    <View
+        android:background="@color/colorTextColorLight"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"/>
+    <TextView
+        android:background="#0f0"
+        android:gravity="center"
+        android:text="这里是内容"
+        android:layout_width="match_parent"
+        android:layout_height="1000dp" />
+
+</LinearLayout>

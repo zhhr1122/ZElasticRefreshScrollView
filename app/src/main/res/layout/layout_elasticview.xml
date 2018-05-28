@@ -5,7 +5,8 @@
     android:layout_height="wrap_content"
     android:background="@color/colorBg"
     >
-    <RelativeLayout
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_marginTop="200dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -35,81 +36,87 @@
                     />
             </LinearLayout>
         </RelativeLayout>
-        <LinearLayout
-            android:id="@+id/ly_meun"
-            android:layout_below="@id/rl_loading"
+        <RelativeLayout
+            android:id="@+id/rl_content"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
+            android:layout_height="wrap_content">
             <LinearLayout
-                android:padding="10dp"
+                android:id="@+id/ly_meun"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 >
                 <LinearLayout
-                    android:id="@+id/ll_category1"
-                    android:background="@color/colorBg"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
+                    android:padding="10dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
+                    android:orientation="horizontal"
                     >
-                    <ImageView
-                        android:src="@mipmap/home_icon_rank"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:id="@+id/ll_category1"
+                        android:background="@color/colorBg"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        />
-                </LinearLayout>
-                <LinearLayout
-                    android:id="@+id/ll_category2"
-                    android:background="@color/colorBg"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    >
-                    <ImageView
-                        android:src="@mipmap/home_icon_category"
-                        android:layout_width="wrap_content"
+                        android:orientation="vertical"
+                        >
+                        <ImageView
+                            android:src="@mipmap/home_icon_rank"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/ll_category2"
+                        android:background="@color/colorBg"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        />
-                </LinearLayout>
-                <LinearLayout
-                    android:id="@+id/ll_category3"
-                    android:background="@color/colorBg"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    >
-                    <ImageView
-                        android:src="@mipmap/home_icon_new"
-                        android:layout_width="wrap_content"
+                        android:orientation="vertical"
+                        >
+                        <ImageView
+                            android:src="@mipmap/home_icon_category"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/ll_category3"
+                        android:background="@color/colorBg"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        />
+                        android:orientation="vertical"
+                        >
+                        <ImageView
+                            android:src="@mipmap/home_icon_new"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
 
-        <View
-            android:background="@color/colorIndexbgTextDark"
-            android:layout_below="@id/ly_meun"
-            android:layout_width="match_parent"
-            android:layout_height="2000dp"
-            android:id="@+id/recycle_view">
-        </View>
+            <View
+                android:layout_below="@id/ly_meun"
+                android:background="@color/colorIndexbgTextDark"
+                android:layout_width="match_parent"
+                android:layout_height="2000dp"
+                android:id="@+id/recycle_view">
+            </View>
+
+        </RelativeLayout>
+
         <ImageView
             android:layout_centerHorizontal="true"
-            android:layout_below="@id/recycle_view"
+            android:layout_below="@id/rl_content"
             android:src="@mipmap/bottom"
             android:layout_width="match_parent"
             android:layout_height="400dp"/>
-    </RelativeLayout>
+    </LinearLayout>
     <View
         android:background="@color/colorAccent"
         android:id="@+id/B_banner"
