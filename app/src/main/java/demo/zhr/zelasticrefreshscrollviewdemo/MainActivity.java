@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         mScrollView.setRefreshing(false);
+                        mScrollView.disable();
                     }
                 },1000);
             }

@@ -52,6 +52,7 @@ public class ZElasticRefreshScrollView extends ScrollView {
     private int offset = 15;
     private int actionbarHeight;
     private boolean isCustomLoadingView;
+    private boolean isAllowRefresh = true;
 
     public ZElasticRefreshScrollView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
@@ -293,7 +294,7 @@ public class ZElasticRefreshScrollView extends ScrollView {
     // 是否需要移动布局  
     public boolean isNeedMove(float nowY) {
         int scrollY = getScrollY();
-        return scrollY == 0 && nowY > mTopView.getMeasuredHeight() || scrollY == height;
+        return scrollY == 0 && (nowY > mTopView.getMeasuredHeight()&&isAllowRefresh) || scrollY == height;
     }
 
     /**
@@ -350,8 +351,17 @@ public class ZElasticRefreshScrollView extends ScrollView {
      */
     public void setBottomView(View view) {
         mMoveView.removeViewAt(2);
+        if(view ==null){
+            View mView = new View(getContext());
+            mView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,1));
+            view = mView;
+        }
         mMoveView.addView(view,2);
         onFinishInflate();
+    }
+
+    public void disable() {
+        isAllowRefresh = false;
     }
 
     public interface RefreshListener{
