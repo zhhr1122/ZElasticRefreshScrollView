@@ -1,14 +1,16 @@
-package demo.zhr.zelasticrefreshscrollviewdemo.CustomView;
+package com.zhhr;
 
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
 import android.util.AttributeSet;
-import android.util.Log;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -19,8 +21,7 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import demo.zhr.zelasticrefreshscrollviewdemo.R;
-import demo.zhr.zelasticrefreshscrollviewdemo.Utils.DisplayUtil;
+import java.lang.reflect.Method;
 
 
 /***
@@ -38,14 +39,11 @@ public class ZElasticRefreshScrollView extends ScrollView {
     private Rect normal = new Rect();
     private int height;
     private boolean isRefresh;
-    private boolean isAction_UP;
-    private RefreshListener listener;
+    private OnRefreshListener refreshListener;
+    private OnScrollListener  scrollListener;
     private View mLoadingTop;
     private ImageView mLoadingTopImg;
     private TextView mLoadingText;
-    public static final int  SCROLL_TO_UP =1;
-    public static final int  SCROLL_TO_DOWN =2;
-    int oldY= 0;
     private View view;
     private int mTopViewHieght = 0;
     private int mLoadingViewHeight = 0;
@@ -75,19 +73,14 @@ public class ZElasticRefreshScrollView extends ScrollView {
             int[] position = new int[2];
             getLocationOnScreen(position);
             actionbarHeight = position[1];
-            Log.d("zhhr1122","actionbarHeight="+actionbarHeight);
+            //Log.d("zhhr1122","actionbarHeight="+actionbarHeight);
         }
-        height = inner.getMeasuredHeight()-mLoadingBottom.getMeasuredHeight()- DisplayUtil.getScreenHeight(getContext())+actionbarHeight;
+        height = inner.getMeasuredHeight()-mLoadingBottom.getMeasuredHeight()- getScreenHeight(getContext())+actionbarHeight;
         if(y>=height){
             this.scrollTo(0,height);
         }
-        if(listener!=null){
-            if(y - oldY>0){
-                listener.onScroll(SCROLL_TO_DOWN);
-            }else if(y - oldY<0&&y<height){
-                listener.onScroll(SCROLL_TO_UP);
-            }
-            oldY = y;
+        if(scrollListener!=null){
+            scrollListener.onScroll(y);
         }
     }
     //获取到ScrollView内部的子View,并赋值给inner
@@ -115,6 +108,7 @@ public class ZElasticRefreshScrollView extends ScrollView {
         RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) mMoveView.getLayoutParams();
         lp.setMargins(0,mTopViewHieght-mLoadingViewHeight,0,0);
         mMoveView.setLayoutParams(lp);
+        height = inner.getMeasuredHeight()-mLoadingBottom.getMeasuredHeight()- getScreenHeight(getContext())+actionbarHeight;
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
@@ -130,12 +124,12 @@ public class ZElasticRefreshScrollView extends ScrollView {
         if (inner == null) {
             return super.onTouchEvent(ev);
         } else {
-            if(isRefresh&&listener!=null){
+            if(isRefresh&&refreshListener!=null){
                 return super.onTouchEvent(ev);
             }
             commOnTouchEvent(ev);
             //防止拉取过度的问题
-            if(mMoveView.getTop()>(mTopViewHieght-mLoadingViewHeight)&&getScrollY()==0||mMoveView.getBottom()<inner.getMeasuredHeight()&&getScrollY() ==inner.getMeasuredHeight()-mLoadingBottom.getMeasuredHeight()-DisplayUtil.getScreenHeight(getContext())){
+            if(mMoveView.getTop()>(mTopViewHieght-mLoadingViewHeight)&&getScrollY()==0||mMoveView.getBottom()<inner.getMeasuredHeight()&&getScrollY() ==inner.getMeasuredHeight()-mLoadingBottom.getMeasuredHeight()-getScreenHeight(getContext())){
                 return false;
             }
             return super.onTouchEvent(ev);
@@ -151,31 +145,24 @@ public class ZElasticRefreshScrollView extends ScrollView {
                 if(!isCustomLoadingView){
                     mLoadingText.setText("下拉刷新");
                 }
-
-                if(listener!=null){
-                    listener.onActionDown();
-                }
                 break;
             case MotionEvent.ACTION_UP:
-                if(listener!=null){
-                    listener.onActionUp();
-                }
                 if (isNeedAnimation()) {
                     // Log.v("mlguitar", "will up and animation");
-                    if(mMoveView.getTop()>(mTopViewHieght+offset)&&listener!=null){
+                    if(mMoveView.getTop()>(mTopViewHieght+offset)&&refreshListener!=null){
                         RefreshAnimation();
                         if(!isCustomLoadingView){
                             mLoadingText.setText("努力加载中...");
                         }
                         //animation();
                         isRefresh = true;
-                        if(listener!=null){
-                            listener.onRefresh();
+                        if(refreshListener!=null){
+                            refreshListener.onRefresh();
                         }
                     }else{
                         //Log.v("zhhr112233", "getScrollY="+getScrollY()+",height="+height);
-                        if(getScrollY()==height&&listener!=null){
-                            listener.onLoadMore();
+                        if(getScrollY()==height&&refreshListener!=null){
+                            refreshListener.onLoadMore();
                         }
                         animation();
                     }
@@ -210,7 +197,7 @@ public class ZElasticRefreshScrollView extends ScrollView {
                                 mMoveView.getBottom() - deltaY);
                     }
 
-                    if(mMoveView.getTop()>(mTopViewHieght+offset)&&listener!=null){
+                    if(mMoveView.getTop()>(mTopViewHieght+offset)&&refreshListener!=null){
                         if(!isCustomLoadingView){
                             mLoadingText.setText("松开即可刷新");
                         }
@@ -228,7 +215,7 @@ public class ZElasticRefreshScrollView extends ScrollView {
 
     public void animation() {
         // 开启移动动画
-        TranslateAnimation ta = new TranslateAnimation(0, 0, mMoveView.getTop()-(mTopViewHieght-mLoadingViewHeight), normal.top-(mTopViewHieght-mLoadingViewHeight));
+        TranslateAnimation ta = new TranslateAnimation(0, 0, mMoveView.getTop()- normal.top, 0);
         Interpolator in = new DecelerateInterpolator();
         ta.setInterpolator(in);
         ta.setDuration(300);
@@ -240,7 +227,7 @@ public class ZElasticRefreshScrollView extends ScrollView {
 
     public void RefreshAnimationFinish() {
         // 开启移动动画
-        TranslateAnimation ta = new TranslateAnimation(0, 0, mMoveView.getTop()-(mTopViewHieght-mLoadingViewHeight), normal.top-(mTopViewHieght-mLoadingViewHeight));
+        TranslateAnimation ta = new TranslateAnimation(0, 0,mMoveView.getTop()- normal.top, 0);
         Interpolator in = new DecelerateInterpolator();
         ta.setInterpolator(in);
         ta.setDuration(300);
@@ -252,8 +239,8 @@ public class ZElasticRefreshScrollView extends ScrollView {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(listener!=null){
-                    listener.onRefreshFinish();
+                if(refreshListener!=null){
+                    refreshListener.onRefreshFinish();
                 }
                 if(!isCustomLoadingView){
                     mLoadingText.setText("下拉刷新");
@@ -360,21 +347,71 @@ public class ZElasticRefreshScrollView extends ScrollView {
         onFinishInflate();
     }
 
+    /**
+     * 关闭刷新
+     */
     public void disable() {
         isAllowRefresh = false;
     }
 
-    public interface RefreshListener{
-        void onActionDown();
-        void onActionUp();
+    public interface OnRefreshListener{
         void onRefresh();
         void onRefreshFinish();
         void onLoadMore();
+    }
+
+    public interface OnScrollListener{
         void onScroll(int y);
     }
 
-    public void setRefreshListener(RefreshListener listener){
-        this.listener = listener;
+    public void setOnRefreshListener(OnRefreshListener listener){
+        this.refreshListener = listener;
+    }
+
+    public void setOnScrollListener(OnScrollListener scrollListener) {
+        this.scrollListener = scrollListener;
+    }
+
+    //获取屏幕原始尺寸高度，包括虚拟功能键高度
+    public static int getDpi(Context context){
+        int dpi = 0;
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        Display display = windowManager.getDefaultDisplay();
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        @SuppressWarnings("rawtypes")
+        Class c;
+        try {
+            c = Class.forName("android.view.Display");
+            @SuppressWarnings("unchecked")
+            Method method = c.getMethod("getRealMetrics",DisplayMetrics.class);
+            method.invoke(display, displayMetrics);
+            dpi=displayMetrics.heightPixels;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return dpi;
+    }
+
+    /**
+     * 获得屏幕高度
+     *
+     * @param context
+     * @return
+     */
+    public static int getScreenHeight(Context context)
+    {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(outMetrics);
+        return outMetrics.heightPixels;
+    }
+
+    public static int getScreenWidth(Context context)
+    {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(outMetrics);
+        return outMetrics.widthPixels;
     }
 
 }
