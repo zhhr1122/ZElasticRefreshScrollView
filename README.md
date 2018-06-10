@@ -12,8 +12,7 @@
 # 用法
 ## 导入
     直接添加依赖
-    compile 'com.zhhr:ZElasticRefresh:1.0.0'（审核中）
-    目前可以直接下载源码使用
+    compile 'com.zhhr:ZElasticRefresh:1.0.0'
 ## 使用方法
 1.直接在XML中引入布局
    
